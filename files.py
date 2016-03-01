@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os
 import sys
 from collections import defaultdict
@@ -18,10 +19,10 @@ for root, subFolders, files in os.walk(rootdir):
 
 for i in fileList:
     if len(fileList[i])>2:
-        print "More than two possibles", i, fileList[i]
+        print("More than two possibles", i, fileList[i])
     if len(fileList[i])==2:
         if filecmp.cmp(fileList[i][0], fileList[i][1]):
-            print "THE SAME ... APPARENTLY", i, fileList[i]
+            print("THE SAME ... APPARENTLY", i, fileList[i])
 
 
 
