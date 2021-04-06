@@ -1,6 +1,9 @@
 import unittest
 import os
-
+import sys
+from pathlib import Path
+sys.path.append(str(Path('.').absolute().parent))
+import filedup
 
 class TestFileDup(unittest.TestCase):
 
@@ -11,14 +14,14 @@ class TestFileDup(unittest.TestCase):
 
     def tearDown(self):
         # remove test database
-        os.remove('/tmp/filedup.db')
-        pass
+        try:
+            os.remove('/tmp/filedup.db')
+        except FileNotFoundError:
+            pass
 
-    def test_sum(self):
-        self.assertEqual(sum([1, 2, 3]), 6, "Should be 6")
-
-    def test_sum_tuple(self):
-        self.assertEqual(sum((1, 2, 2)), 6, "Should be 6")
+    def test_get_DB_object(self):
+        a = filedup.open_db()
+        self.assertIsInstance(a, filedup.MyDB)
 
 if __name__ == '__main__':
     unittest.main()
