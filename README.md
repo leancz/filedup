@@ -15,7 +15,7 @@ del db
 ```
 
 ## Usage
-Scan a directory for files and record files and hashes in database
+Scan a directory for files, and record those files and their hashes in the database
 
 ```python
 filedup.populate('D:')
@@ -26,5 +26,16 @@ Report on duplicates
 ```python
 filedup.report()
 ```
+
+Remove duplicates
+```
+filedup.delete_duplicates()
+```
+
+Cleanup after removing duplicates
+```
+for i in file_dup.deleted_files(): file_dup.delete_file_from_db(i)
+```
+
 
 
