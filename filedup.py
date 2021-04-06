@@ -1,17 +1,30 @@
 # -*- coding: utf-8 -*-
 """
-
 Improvements and ideas TODO
 1. This is written on Windows, make sure it works on osx/linux too (paths and concating files to paths)
 2. How about including timestamp of when the hash was calculated in order to do a file change monitor
 3. How about including file sizes so we can report on big file duplicates or order by size.
-
 """
 import hashlib
 import sqlite3
 import glob
 import os
-DATABASE_FILE = 'c:/Users/bob/AppData/Local/filedup.db'
+import pathlib
+import sys
+
+# if Windows db is in AppData/Local
+# if mac / linux put it in .filedup
+
+home = str(pathlib.Path.home())
+
+platform = sys.platform
+if platform == 'win32':
+    home_path = home + '/AppData/Local/'
+else:
+    home_path = home + '/.filedup/'
+
+
+DATABASE_FILE = home_path + 'filedup.db'
 WINDOW = 1000 # tuning for fetchmany
 
 
@@ -100,7 +113,7 @@ def get_file_names(pattern, recurse=False):
     for file in files:
         print('DEBUG file: {}'.format(file))
         if os.path.isdir(file) and recurse:
-            output = output + get_file_names(file+'\\*', recurse=True)
+            output = output + get_file_names(file+'/*', recurse=True)
         elif os.path.isfile(file): output.append(file)
     return output
 
@@ -119,6 +132,29 @@ def populate(pattern):
     for file in get_file_names(pattern, recurse=True):
         insert_file(db, file)
         db.commit()
+
+def get_duplicates():
+    db = open_db()
+    duplicates = db.query("select hash_id, count(hash_id) from files group by hash_id having count(hash_id) > 1", [])
+    return duplicates.fetchall()
+
+def delete_duplicates():
+    db = open_db()
+    for i in get_duplicates():
+        result = db.query("select file_path, hash_id from files where hash_id = ?", (i[0],))
+        files = result.fetchall()
+
+        print('1', files[0])
+        print('2', files[1])
+        choice = input("1/2: ")
+        if choice not in ('1','2','q'): continue
+        if choice == 'q': break
+        if choice == '1':
+            print("deleting file {}".format(files[0][0]))
+            os.remove(files[0][0])
+        if choice == '2':
+            print("deleting file {}".format(files[1][0]))
+            os.remove(files[1][0])
 
 def report():
     db = open_db()
@@ -157,3 +193,11 @@ def delete_redundant_hashes():
     for hash in redundant_hashes():
         db.query("delete from file_hashes where id = ?", (hash,))
     db.commit()
+
+# typical workflow:
+
+# 1. delete duplicates
+# >> file_dup.delete_duplicates()
+# 2. clean up
+# >> for i in file_dup.deleted_files(): file_dup.delete_file_from_db(i)
+#
